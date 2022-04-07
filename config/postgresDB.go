@@ -3,6 +3,7 @@ package config
 import (
 	"REST-echo-gorm/models"
 	"fmt"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -21,7 +22,7 @@ func ConnectDB() *gorm.DB {
 		DB_Password: "academy",
 		DB_Port:     "5432",
 		DB_Host:     "localhost",
-		DB_Name:     "rest",
+		DB_Name:     "rest_test",
 	}
 
 	connectionString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
