@@ -26,9 +26,10 @@ func GetUsers() ([]models.Users, error) {
 	return users, nil
 }
 
-func UpdateUser(user models.Users) (models.Users, error) {
-	if err := DB.Save(&user).Error; err != nil {
-		return models.Users{}, err
+func UpdateUser(reqId string) (models.Users, error) {
+	var user models.Users
+	if err := DB.Where("Id = ?", reqId).First(&user).Error; err != nil {
+		return user, err
 	}
 
 	return user, nil

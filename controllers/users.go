@@ -1,10 +1,11 @@
 package controllers
 
 import (
+	"REST-echo-gorm/helpers"
 	"REST-echo-gorm/lib/databases"
 	"REST-echo-gorm/models"
 	"net/http"
-	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -37,8 +38,8 @@ func CreateUserController(c echo.Context) (err error) {
 	userResponses.Email = user.Email
 	userResponses.Password = user.Password
 
-	return c.JSON(http.StatusOK, ResponseFormat{
-		Status:   http.StatusOK,
+	return c.JSON(http.StatusCreated, ResponseFormat{
+		Status:   http.StatusCreated,
 		Messages: "Success create user",
 		Data:     userResponses,
 	})
@@ -74,16 +75,37 @@ func GetUsersController(c echo.Context) error {
 }
 
 func UpdateUserController(c echo.Context) error {
-	req := models.Users{}
-	c.Bind(&req)
-
-	if err := c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	user, err := databases.UpdateUser(req)
+	reqId := c.Param("id")
+	user, err := databases.UpdateUser(reqId)
 
 	if err != nil {
+		return c.JSON(http.StatusNotFound, ResponseFormat{
+			Status:   http.StatusNotFound,
+			Messages: "Failed",
+			Data:     err.Error(),
+		})
+	}
+
+	payload := models.UsersResponse{}
+	payload.ID = helpers.ConvertStringToUint(reqId)
+	c.Bind(&payload)
+
+	// user.ID = helpers.ConvertStringToUint(reqId)
+	user.ID = payload.ID
+	user.Name = payload.Name
+	user.Email = payload.Email
+	user.Password = payload.Password
+	user.UpdatedAt = time.Now()
+
+	if err := c.Validate(&payload); err != nil {
+		return c.JSON(http.StatusBadRequest, ResponseFormat{
+			Status:   http.StatusBadRequest,
+			Messages: "Failed",
+			Data:     err.Error(),
+		})
+	}
+
+	if err := databases.DB.Save(&user).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, ResponseFormat{
 			Status:   http.StatusInternalServerError,
 			Messages: "Failed",
@@ -91,16 +113,9 @@ func UpdateUserController(c echo.Context) error {
 		})
 	}
 
-	// make userResponses from database
-	var userResponses models.UsersResponse
-	userResponses.ID = user.ID
-	userResponses.Name = user.Name
-	userResponses.Email = user.Email
-	userResponses.Password = user.Password
-
 	return c.JSON(http.StatusOK, ResponseFormat{
 		Status:   http.StatusOK,
-		Messages: "Success update user with id " + strconv.Itoa(int(user.ID)),
-		Data:     userResponses,
+		Messages: "Success",
+		Data:     payload,
 	})
 }
