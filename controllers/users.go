@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"REST-echo-gorm/helpers"
-	"REST-echo-gorm/lib/databases"
-	"REST-echo-gorm/models"
 	"net/http"
+	"rest-echo-gorm/helpers"
+	"rest-echo-gorm/lib/databases"
+	"rest-echo-gorm/models"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -74,6 +74,30 @@ func GetUsersController(c echo.Context) error {
 	})
 }
 
+func GetUserController(c echo.Context) error {
+	user, err := databases.GetUser(c.Param("id"))
+
+	if err != nil {
+		return c.JSON(http.StatusNotFound, ResponseFormat{
+			Status:   http.StatusNotFound,
+			Messages: "Failed",
+			Data:     err.Error(),
+		})
+	}
+
+	var userResponses models.UsersResponse
+	userResponses.ID = user.ID
+	userResponses.Name = user.Name
+	userResponses.Email = user.Email
+	userResponses.Password = user.Password
+
+	return c.JSON(http.StatusOK, ResponseFormat{
+		Status:   http.StatusOK,
+		Messages: "Success",
+		Data:     userResponses,
+	})
+}
+
 func UpdateUserController(c echo.Context) error {
 	reqId := c.Param("id")
 	user, err := databases.UpdateUser(reqId)
@@ -117,5 +141,24 @@ func UpdateUserController(c echo.Context) error {
 		Status:   http.StatusOK,
 		Messages: "Success",
 		Data:     payload,
+	})
+}
+
+func DeleteUserController(c echo.Context) error {
+	reqId := c.Param("id")
+	user, err := databases.DeleteUser(reqId)
+
+	if err != nil {
+		return c.JSON(http.StatusNotFound, ResponseFormat{
+			Status:   http.StatusNotFound,
+			Messages: "Failed",
+			Data:     err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, ResponseFormat{
+		Status:   http.StatusOK,
+		Messages: "Success",
+		Data:     "User with id " + user + " has been deleted",
 	})
 }

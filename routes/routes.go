@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"REST-echo-gorm/controllers"
-	"REST-echo-gorm/helpers"
+	"rest-echo-gorm/controllers"
+	"rest-echo-gorm/helpers"
 
 	"github.com/go-playground/validator/v10"
 
@@ -17,7 +17,9 @@ func New() *echo.Echo {
 
 	e.POST("/users", controllers.CreateUserController)
 	e.GET("/users", controllers.GetUsersController)
+	e.GET("/users/:id", controllers.GetUserController)
 	e.PUT("/users/:id", controllers.UpdateUserController)
+	e.DELETE("/users/:id", controllers.DeleteUserController)
 
 	return e
 }

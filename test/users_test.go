@@ -1,14 +1,15 @@
 package test
 
 import (
-	"REST-echo-gorm/config"
-	"REST-echo-gorm/controllers"
-	"REST-echo-gorm/helpers"
-	"REST-echo-gorm/models"
 	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"rest-echo-gorm/config"
+	"rest-echo-gorm/controllers"
+	"rest-echo-gorm/helpers"
+	"rest-echo-gorm/models"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -157,6 +158,77 @@ func TestGetUsersController(t *testing.T) {
 	})
 }
 
+func TestGetUserController(t *testing.T) {
+	t.Run("Test get user with valid id", func(t *testing.T) {
+		user := insertUserDb("user1", "user1@gmail.com", "user123")
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/users", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/users/:id")
+		c.SetParamNames("id")
+		c.SetParamValues(strconv.Itoa(int(user.ID)))
+
+		expectedResponse := &controllers.ResponseFormat{
+			Status:   http.StatusOK,
+			Messages: "Success",
+			Data: models.UsersResponse{
+				ID:       user.ID,
+				Name:     user.Name,
+				Email:    user.Email,
+				Password: user.Password,
+			},
+		}
+
+		var expectedResponseJson bytes.Buffer
+		if err := json.NewEncoder(&expectedResponseJson).Encode(expectedResponse); err != nil {
+			t.Fatal(err)
+		}
+
+		if assert.NoError(t, controllers.GetUserController(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, expectedResponseJson.String(), rec.Body.String())
+		}
+
+		// Clean table
+		CleanTable([]string{"users"})
+	})
+
+	t.Run("Test get user with invalid id", func(t *testing.T) {
+		insertUserDb("user1", "user1@gmail.com", "user123")
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/users", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/users/:id")
+		c.SetParamNames("id")
+		c.SetParamValues(strconv.Itoa(1))
+
+		expectedResponse := &controllers.ResponseFormat{
+			Status:   http.StatusNotFound,
+			Messages: "Failed",
+			Data:     "record not found",
+		}
+
+		var expectedResponseJson bytes.Buffer
+		if err := json.NewEncoder(&expectedResponseJson).Encode(expectedResponse); err != nil {
+			t.Fatal(err)
+		}
+
+		if assert.NoError(t, controllers.GetUserController(c)) {
+			assert.Equal(t, expectedResponse.Status, rec.Code)
+			assert.Equal(t, expectedResponseJson.String(), rec.Body.String())
+		}
+
+		// Clean table
+		CleanTable([]string{"users"})
+	})
+}
+
 func TestUpdateUserController(t *testing.T) {
 	t.Run("Update user with valid payload", func(t *testing.T) {
 		// First insert user into DB
@@ -213,6 +285,9 @@ func TestUpdateUserController(t *testing.T) {
 			assert.Equal(t, expectedReturnsJson.String(), rec.Body.String())
 
 		}
+
+		// Clean table
+		CleanTable([]string{"users"})
 	})
 
 	t.Run("Update user with invalid payload", func(t *testing.T) {
@@ -264,6 +339,69 @@ func TestUpdateUserController(t *testing.T) {
 
 			assert.Equal(t, expectedReturnsJson.String(), rec.Body.String())
 
+		}
+
+		// Clean table
+		CleanTable([]string{"users"})
+	})
+}
+
+func TestDeleteUserController(t *testing.T) {
+	t.Run("Delete user with valid id", func(t *testing.T) {
+		user := insertUserDb("user1", "user1@gmail.com", "user123")
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodDelete, "/users", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/users/:id")
+		c.SetParamNames("id")
+		c.SetParamValues(strconv.Itoa(int(user.ID)))
+
+		expectedResponse := &controllers.ResponseFormat{
+			Status:   http.StatusOK,
+			Messages: "Success",
+			Data:     "User with id " + strconv.Itoa(int(user.ID)) + " has been deleted",
+		}
+
+		var expectedResponseJson bytes.Buffer
+		if err := json.NewEncoder(&expectedResponseJson).Encode(expectedResponse); err != nil {
+			t.Fatal(err)
+		}
+
+		if assert.NoError(t, controllers.DeleteUserController(c)) {
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, expectedResponseJson.String(), rec.Body.String())
+		}
+	})
+
+	t.Run("Delete user with invalid id", func(t *testing.T) {
+		insertUserDb("user1", "user1@gmail.com", "user123")
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodDelete, "/users", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/users/:id")
+		c.SetParamNames("id")
+		c.SetParamValues(strconv.Itoa(1))
+
+		expectedResponse := &controllers.ResponseFormat{
+			Status:   http.StatusNotFound,
+			Messages: "Failed",
+			Data:     "record not found",
+		}
+
+		var expectedResponseJson bytes.Buffer
+		if err := json.NewEncoder(&expectedResponseJson).Encode(expectedResponse); err != nil {
+			t.Fatal(err)
+		}
+
+		if assert.NoError(t, controllers.DeleteUserController(c)) {
+			assert.Equal(t, expectedResponse.Status, rec.Code)
+			assert.Equal(t, expectedResponseJson.String(), rec.Body.String())
 		}
 	})
 }

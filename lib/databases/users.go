@@ -1,8 +1,9 @@
 package databases
 
 import (
-	"REST-echo-gorm/config"
-	"REST-echo-gorm/models"
+	"rest-echo-gorm/config"
+	"rest-echo-gorm/helpers"
+	"rest-echo-gorm/models"
 )
 
 var DB = config.ConnectDB()
@@ -26,6 +27,15 @@ func GetUsers() ([]models.Users, error) {
 	return users, nil
 }
 
+func GetUser(reqId string) (*models.Users, error) {
+	var user models.Users
+	if err := DB.Where("Id = ?", reqId).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func UpdateUser(reqId string) (models.Users, error) {
 	var user models.Users
 	if err := DB.Where("Id = ?", reqId).First(&user).Error; err != nil {
@@ -33,4 +43,16 @@ func UpdateUser(reqId string) (models.Users, error) {
 	}
 
 	return user, nil
+}
+
+func DeleteUser(reqId string) (string, error) {
+	var user models.Users
+
+	if err := DB.Where("Id = ?", reqId).First(&user).Delete(&user).Error; err != nil {
+		return "", err
+	}
+
+	userId := helpers.ConvertUintToString(user.ID)
+
+	return userId, nil
 }

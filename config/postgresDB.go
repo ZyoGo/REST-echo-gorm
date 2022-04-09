@@ -1,11 +1,12 @@
 package config
 
 import (
-	"REST-echo-gorm/models"
 	"fmt"
+	"rest-echo-gorm/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Config struct {
@@ -18,11 +19,11 @@ type Config struct {
 
 func ConnectDB() *gorm.DB {
 	config := &Config{
-		DB_Username: "devpostgres",
-		DB_Password: "devpostgres",
+		DB_Username: "postgres",
+		DB_Password: "academy",
 		DB_Port:     "5432",
 		DB_Host:     "localhost",
-		DB_Name:     "gorm_test",
+		DB_Name:     "rest_test",
 	}
 
 	connectionString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
@@ -34,7 +35,9 @@ func ConnectDB() *gorm.DB {
 	)
 
 	var err error
-	DB, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{})
+	DB, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 
 	if err != nil {
 		panic(err)

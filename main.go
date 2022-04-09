@@ -1,8 +1,8 @@
 package main
 
 import (
-	"REST-echo-gorm/config"
-	"REST-echo-gorm/routes"
+	"rest-echo-gorm/config"
+	"rest-echo-gorm/routes"
 )
 
 func main() {
