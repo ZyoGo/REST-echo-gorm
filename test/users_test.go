@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"rest-echo-gorm/config"
@@ -38,9 +39,42 @@ func insertUserDb(name, email, password string) models.Users {
 	return user
 }
 
+func CreateToken() string {
+	insertUserDb("user1", "user1@gmail.com", "user123")
+
+	requestBody := strings.NewReader(`{"email":"user1@gmail.com","password":"user123"}`)
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", requestBody)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	c.SetPath("/auth/login")
+	controllers.LoginUserController(c)
+
+	e.Validator = &helpers.CustomValidator{Validator: validator.New()}
+
+	// Decode rec.body and exctract Data.id
+	var response struct {
+		Data struct {
+			Token string `json:"token"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal([]byte(rec.Body.String()), &response); err != nil {
+		panic(err)
+	}
+
+	return response.Data.Token
+}
+
 func TestCreateUserController(t *testing.T) {
 	t.Run("Test create user with valid payload", func(t *testing.T) {
 		config.InitialMigration()
+
+		fmt.Println("get token", CreateToken())
+		fmt.Println("test test")
 
 		requestBody := strings.NewReader(`{"name":"user1","email":"user1@gmail.com","password":"user123"}`)
 
