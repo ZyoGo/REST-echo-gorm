@@ -15,13 +15,13 @@ func CreateBookController(c echo.Context) error {
 
 	if err := c.Validate(req); err != nil {
 		return c.JSON(http.StatusBadRequest, &ResponseFormat{
-			Status: http.StatusBadRequest,
+			Status:   http.StatusBadRequest,
 			Messages: "Fail",
-			Data: err.Error(),
+			Data:     err.Error(),
 		})
 	}
 
-	book, _ := databases.CreateBook(req)
+	book, _ := databases.CreateBook(&req)
 
 	var bookResponse models.BooksResponse
 	bookResponse.ID = book.ID
@@ -30,9 +30,9 @@ func CreateBookController(c echo.Context) error {
 	bookResponse.Year = book.Year
 
 	return c.JSON(http.StatusCreated, &ResponseFormat{
-		Status: http.StatusCreated,
+		Status:   http.StatusCreated,
 		Messages: "Success",
-		Data: bookResponse,
+		Data:     &bookResponse,
 	})
 }
 
@@ -43,9 +43,9 @@ func GetBookController(c echo.Context) error {
 
 	if err != nil {
 		return c.JSON(http.StatusNotFound, &ResponseFormat{
-			Status: http.StatusNotFound,
+			Status:   http.StatusNotFound,
 			Messages: "Fail",
-			Data: err.Error(),
+			Data:     err.Error(),
 		})
 	}
 
@@ -56,9 +56,9 @@ func GetBookController(c echo.Context) error {
 	bookResponse.Year = book.Year
 
 	return c.JSON(http.StatusOK, &ResponseFormat{
-		Status: http.StatusOK,
+		Status:   http.StatusOK,
 		Messages: "Success",
-		Data: bookResponse,
+		Data:     bookResponse,
 	})
 }
 
@@ -84,9 +84,9 @@ func GetBooksController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &ResponseFormat{
-		Status: http.StatusOK,
+		Status:   http.StatusOK,
 		Messages: "Success",
-		Data: booksResponse,
+		Data:     booksResponse,
 	})
 }
 
@@ -128,8 +128,27 @@ func UpdateBookController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &ResponseFormat{
-		Status: http.StatusOK,
+		Status:   http.StatusOK,
 		Messages: "Success",
-		Data: bookPayload,
+		Data:     bookPayload,
+	})
+}
+
+func DeleteBookController(c echo.Context) error {
+	reqId := c.Param("id")
+	bookId, err := databases.DeleteBook(reqId)
+
+	if err != nil {
+		return c.JSON(http.StatusNotFound, ResponseFormat{
+			Status:   http.StatusNotFound,
+			Messages: "Failed",
+			Data:     err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, ResponseFormat{
+		Status:   http.StatusOK,
+		Messages: "Success",
+		Data:     "Book with id " + bookId + " has been deleted",
 	})
 }

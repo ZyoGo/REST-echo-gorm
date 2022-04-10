@@ -1,3 +1,3 @@
 package constants
 
-const SECRET_JWT = "Secret123"
+const SecretKey = "Secret123"

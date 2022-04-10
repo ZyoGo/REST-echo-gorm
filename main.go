@@ -12,5 +12,5 @@ func main() {
 	// Initialize Routes
 	e := routes.New()
 
-	e.Logger.Fatal(e.Start(":4001"))
+	e.Logger.Fatal(e.Start("localhost:4001"))
 }

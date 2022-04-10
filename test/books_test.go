@@ -12,21 +12,22 @@ import (
 	"rest-echo-gorm/controllers"
 	"rest-echo-gorm/helpers"
 	"rest-echo-gorm/models"
+	"strconv"
 	"strings"
 	"testing"
 )
 
 func insertBooks(title, author string, year int) *models.Books {
 	book := &models.Books{
-		Title: title,
+		Title:  title,
 		Author: author,
-		Year: year,
+		Year:   year,
 	}
 
 	if err := config.ConnectDB().Create(&book).Error; err != nil {
 		panic(err.Error())
 	}
-	
+
 	return book
 }
 
@@ -45,7 +46,7 @@ func TestCreateBookController(t *testing.T) {
 		e.Validator = &helpers.CustomValidator{Validator: validator.New()}
 
 		if assert.NoError(t, controllers.CreateBookController(c)) {
-			var response struct{
+			var response struct {
 				Data models.BooksResponse `json:"data"`
 			}
 
@@ -54,13 +55,13 @@ func TestCreateBookController(t *testing.T) {
 			}
 
 			expectedResponse := &controllers.ResponseFormat{
-				Status: http.StatusCreated,
+				Status:   http.StatusCreated,
 				Messages: "Success",
 				Data: models.BooksResponse{
-					ID: response.Data.ID,
-					Title: "book1",
+					ID:     response.Data.ID,
+					Title:  "book1",
 					Author: "user1",
-					Year: 2022,
+					Year:   2022,
 				},
 			}
 
@@ -73,6 +74,7 @@ func TestCreateBookController(t *testing.T) {
 			assert.Equal(t, expectedResponses.String(), rec.Body.String())
 		}
 
+		// Clean table books
 		CleanTable([]string{"books"})
 	})
 
@@ -90,9 +92,9 @@ func TestCreateBookController(t *testing.T) {
 		e.Validator = &helpers.CustomValidator{Validator: validator.New()}
 
 		expectedResponse := &controllers.ResponseFormat{
-			Status: http.StatusBadRequest,
+			Status:   http.StatusBadRequest,
 			Messages: "Fail",
-			Data: "code=400, message=Key: 'Books.Year' Error:Field validation for 'Year' failed on the 'required' tag",
+			Data:     "code=400, message=Key: 'Books.Year' Error:Field validation for 'Year' failed on the 'required' tag",
 		}
 
 		var expectedResponses bytes.Buffer
@@ -124,13 +126,13 @@ func TestGetBookController(t *testing.T) {
 		c.SetParamValues(helpers.ConvertUintToString(book.ID))
 
 		expectedResponse := &controllers.ResponseFormat{
-			Status: http.StatusOK,
+			Status:   http.StatusOK,
 			Messages: "Success",
 			Data: &models.BooksResponse{
-				ID: book.ID,
-				Title: book.Title,
+				ID:     book.ID,
+				Title:  book.Title,
 				Author: book.Author,
-				Year: book.Year,
+				Year:   book.Year,
 			},
 		}
 
@@ -143,6 +145,9 @@ func TestGetBookController(t *testing.T) {
 			assert.Equal(t, expectedResponse.Status, rec.Code)
 			assert.Equal(t, expectedResponses.String(), rec.Body.String())
 		}
+
+		// Clean table books
+		CleanTable([]string{"books"})
 	})
 
 	t.Run("Get book with invalid id", func(t *testing.T) {
@@ -158,9 +163,9 @@ func TestGetBookController(t *testing.T) {
 		c.SetParamValues("1000")
 
 		expectedResponse := &controllers.ResponseFormat{
-			Status: http.StatusNotFound,
+			Status:   http.StatusNotFound,
 			Messages: "Fail",
-			Data: "record not found",
+			Data:     "record not found",
 		}
 
 		var expectedResponses bytes.Buffer
@@ -172,6 +177,9 @@ func TestGetBookController(t *testing.T) {
 			assert.Equal(t, expectedResponse.Status, rec.Code)
 			assert.Equal(t, expectedResponses.String(), rec.Body.String())
 		}
+
+		// Clean table books
+		CleanTable([]string{"books"})
 	})
 }
 
@@ -179,14 +187,14 @@ func TestGetBooksController(t *testing.T) {
 	t.Run("Test get books controller", func(t *testing.T) {
 		books := []models.Books{
 			{
-				Title: "Book1",
+				Title:  "Book1",
 				Author: "user1",
-				Year: 2021,
+				Year:   2021,
 			},
 			{
-				Title: "Book2",
+				Title:  "Book2",
 				Author: "user2",
-				Year: 2022,
+				Year:   2022,
 			},
 		}
 
@@ -202,7 +210,7 @@ func TestGetBooksController(t *testing.T) {
 		if assert.NoError(t, controllers.GetBooksController(c)) {
 			body := rec.Body.String()
 
-			var response struct{
+			var response struct {
 				Data []models.BooksResponse `json:"data"`
 			}
 
@@ -214,6 +222,9 @@ func TestGetBooksController(t *testing.T) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 			assert.Equal(t, len(books), len(response.Data))
 		}
+
+		// Clean table books
+		CleanTable([]string{"books"})
 	})
 }
 
@@ -236,13 +247,13 @@ func TestUpdateBookController(t *testing.T) {
 		c.SetParamValues(helpers.ConvertUintToString(book.ID))
 
 		expectedResponse := &controllers.ResponseFormat{
-			Status: http.StatusOK,
+			Status:   http.StatusOK,
 			Messages: "Success",
 			Data: &models.BooksResponse{
-				ID: book.ID,
-				Title: "Book 2 Changed",
+				ID:     book.ID,
+				Title:  "Book 2 Changed",
 				Author: "User 2 Changed",
-				Year: 2023,
+				Year:   2023,
 			},
 		}
 
@@ -255,6 +266,9 @@ func TestUpdateBookController(t *testing.T) {
 			assert.Equal(t, expectedResponse.Status, rec.Code)
 			assert.Equal(t, expectedResponses.String(), rec.Body.String())
 		}
+
+		// Clean table books
+		CleanTable([]string{"books"})
 	})
 
 	t.Run("Test update book with invalid payload", func(t *testing.T) {
@@ -275,9 +289,9 @@ func TestUpdateBookController(t *testing.T) {
 		c.SetParamValues(helpers.ConvertUintToString(book.ID))
 
 		expectedResponse := &controllers.ResponseFormat{
-			Status: http.StatusBadRequest,
-			Messages: "Fail",
-			Data: "code=400, message=Key: 'BooksResponse.Year' Error:Field validation for 'Year' failed on the 'required' tag",
+			Status:   http.StatusBadRequest,
+			Messages: "Failed",
+			Data:     "code=400, message=Key: 'BooksResponse.Year' Error:Field validation for 'Year' failed on the 'required' tag",
 		}
 
 		var expectedResponses bytes.Buffer
@@ -289,5 +303,74 @@ func TestUpdateBookController(t *testing.T) {
 			assert.Equal(t, expectedResponse.Status, rec.Code)
 			assert.Equal(t, expectedResponses.String(), rec.Body.String())
 		}
+
+		// Clean table books
+		CleanTable([]string{"books"})
+	})
+}
+
+func TestDeleteBookController(t *testing.T) {
+	t.Run("Delete book with valid id", func(t *testing.T) {
+		book := insertBooks("Book1", "user1", 2022)
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPut, "/books", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/books/:id")
+		c.SetParamNames("id")
+		c.SetParamValues(helpers.ConvertUintToString(book.ID))
+
+		expectedResponse := &controllers.ResponseFormat{
+			Status:   http.StatusOK,
+			Messages: "Success",
+			Data:     "Book with id " + strconv.Itoa(int(book.ID)) + " has been deleted",
+		}
+
+		var expectedResponses bytes.Buffer
+		if err := json.NewEncoder(&expectedResponses).Encode(&expectedResponse); err != nil {
+			t.Fatal(err.Error())
+		}
+
+		if assert.NoError(t, controllers.DeleteBookController(c)) {
+			assert.Equal(t, expectedResponse.Status, rec.Code)
+			assert.Equal(t, expectedResponses.String(), rec.Body.String())
+		}
+
+		// Clean table books
+		CleanTable([]string{"books"})
+	})
+
+	t.Run("Delete book with valid id", func(t *testing.T) {
+		insertBooks("Book1", "user1", 2022)
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPut, "/books", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/books/:id")
+		c.SetParamNames("id")
+		c.SetParamValues("1")
+
+		expectedResponse := &controllers.ResponseFormat{
+			Status:   http.StatusNotFound,
+			Messages: "Failed",
+			Data:     "record not found",
+		}
+
+		var expectedResponses bytes.Buffer
+		if err := json.NewEncoder(&expectedResponses).Encode(&expectedResponse); err != nil {
+			t.Fatal(err.Error())
+		}
+
+		if assert.NoError(t, controllers.DeleteBookController(c)) {
+			assert.Equal(t, expectedResponse.Status, rec.Code)
+			assert.Equal(t, expectedResponses.String(), rec.Body.String())
+		}
+
+		// Clean table books
+		CleanTable([]string{"books"})
 	})
 }

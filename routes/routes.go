@@ -1,12 +1,14 @@
 package routes
 
 import (
+	"rest-echo-gorm/constants"
 	"rest-echo-gorm/controllers"
 	"rest-echo-gorm/helpers"
+	m "rest-echo-gorm/middleware"
 
 	"github.com/go-playground/validator/v10"
-
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func New() *echo.Echo {
@@ -15,17 +17,32 @@ func New() *echo.Echo {
 	// Initialaze validator
 	e.Validator = &helpers.CustomValidator{Validator: validator.New()}
 
-	e.POST("/users", controllers.CreateUserController)
-	e.GET("/users", controllers.GetUsersController)
-	e.GET("/users/:id", controllers.GetUserController)
-	e.PUT("/users/:id", controllers.UpdateUserController)
-	e.DELETE("/users/:id", controllers.DeleteUserController)
+	// Middleware
+	m.LogMiddleware(e)
 
-	// Books routes
-	e.POST("/books", controllers.CreateBookController)
+	// Login user
+	e.POST("/auth/login", controllers.LoginUserController)
+
+	// Register user
+	e.POST("/users", controllers.CreateUserController)
+
+	// Book
 	e.GET("/books", controllers.GetBooksController)
 	e.GET("/books/:id", controllers.GetBookController)
-	e.PUT("/books/:id", controllers.UpdateBookController)
+
+	// JWT Grouping
+	jwtAuth := e.Group("")
+	jwtAuth.Use(middleware.JWT([]byte(constants.SecretKey)))
+
+	jwtAuth.GET("/users", controllers.GetUsersController)
+	jwtAuth.GET("/users/:id", controllers.GetUserController)
+	jwtAuth.PUT("/users/:id", controllers.UpdateUserController)
+	jwtAuth.DELETE("/users/:id", controllers.DeleteUserController)
+
+	// Books routes
+	jwtAuth.POST("/books", controllers.CreateBookController)
+	jwtAuth.PUT("/books/:id", controllers.UpdateBookController)
+	jwtAuth.DELETE("/books/:id", controllers.DeleteBookController)
 
 	return e
 }
