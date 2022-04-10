@@ -18,12 +18,20 @@ type Config struct {
 }
 
 func ConnectDB() *gorm.DB {
+	//config := &Config{
+	//	DB_Username: "postgres",
+	//	DB_Password: "academy",
+	//	DB_Port:     "5432",
+	//	DB_Host:     "localhost",
+	//	DB_Name:     "rest_test",
+	//}
+
 	config := &Config{
-		DB_Username: "postgres",
-		DB_Password: "academy",
+		DB_Username: "devpostgres",
+		DB_Password: "devpostgres",
 		DB_Port:     "5432",
 		DB_Host:     "localhost",
-		DB_Name:     "rest_test",
+		DB_Name:     "gorm_test",
 	}
 
 	connectionString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
